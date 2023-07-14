@@ -1,2 +1,2 @@
-# timetable
-timetable
+# timetable-project
+database for timetable
