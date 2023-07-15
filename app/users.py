@@ -5,7 +5,6 @@ import typing as tp
 from bs4 import PageElement, Tag, NavigableString
 from sqlalchemy import text
 from app import engine, get_html, execute_insert
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def fill_user_table(user_id: int, first_name: str, last_name,
@@ -49,17 +48,23 @@ async def process_all_users(html: str) -> None:
     parsed_html = bs4.BeautifulSoup(markup=html, features="lxml")
     rows = parsed_html.findAll('div', attrs={'class': 'tile'})
 
+    if rows is None:
+        return
+
     for row in rows:
+        result = process_user(row)
+        if result is None:
+            continue
         # Получаем информацию о преподавателе
-        user_id, first_name, last_name, middle_name, posts, departments = process_user(
-            row)
+        user_id, first_name, last_name, middle_name, posts, departments = result
+
         # Заполнение таблицы преподаватель
         await fill_user_table(user_id, first_name, last_name, middle_name,
                               posts, departments)
 
 
 def process_user(
-        row: PageElement | Tag | NavigableString) -> tuple[tp.Any, ...] | None:
+        row: PageElement | Tag | NavigableString) -> None | tuple[tp.Any, ...]:
     """A function for processing information about each user"""
 
     try:
@@ -91,23 +96,23 @@ def process_user(
 
     # Кафедр может быть несколько(пока что просто в строку)
     department_name_parts = [
-        x.strip() for x in department_name_part.split('\r\n')
+        x.strip() for x in department_name_part.split('\n')
     ]
 
     # Должностей может быть несколько(пока что просто в строку)
-    posts = [x.strip() for x in post.split('\r\n')]
+    posts = [x.strip() for x in post.split('\n')]
 
     full_name = name.split(' ')
 
     if len(full_name) < 2:
-        return
+        return None
 
     first_name = full_name[0]
     last_name = full_name[1]
     middle_name: None | str = None
 
-    if len(full_name) == 3:
-        middle_name = full_name[2]
+    if len(full_name) >= 3:
+        middle_name = " ".join(full_name[2:])
 
     return user_id, first_name, last_name, middle_name, " ".join(
         posts), " ".join(department_name_parts)

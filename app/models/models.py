@@ -55,6 +55,7 @@ class Field(Base):
     __tablename__ = "Field"
     id = Column(Integer, primary_key=True)
     name = Column(String(300))
+    year = Column(Integer)
 
 
 class Group(Base):
@@ -62,6 +63,5 @@ class Group(Base):
     __tablename__ = "Group"
     id = Column(Integer, primary_key=True)
     name = Column(String(128))
-    year = Column(Integer)
     type = Column(String(32))
     field_id = Column(Integer, ForeignKey('Field.id', ondelete='CASCADE'))

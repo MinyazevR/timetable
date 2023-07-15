@@ -6,13 +6,13 @@ import asyncpg
 import bs4
 
 from sqlalchemy import text
-from bs4 import NavigableString, Tag
+from bs4 import element
 from app import engine, get_html, execute_insert
 
 __all__ = ['fill_event_table_with_interval', 'delete_events']
 
 
-async def delete_events(left_date: datetime, right_date: datetime) -> None:
+async def delete_events(left_date: datetime.datetime, right_date: datetime.datetime) -> None:
     async with engine.connect() as session:
         await session.execute(
             text('DELETE From "Event" '
@@ -24,7 +24,7 @@ async def delete_events(left_date: datetime, right_date: datetime) -> None:
         await session.commit()
 
 
-async def fill_event_table(dt_start: datetime, dt_end: datetime, subject: str,
+async def fill_event_table(dt_start: datetime.datetime, dt_end: datetime.datetime, subject: str,
                            location: str) -> int:
     """Function for filling in the Event table"""
     async with engine.connect() as session:
@@ -84,12 +84,12 @@ async def fill_group_to_event_table(group_id: int, event_id: int):
                 })
 
 
-def process_timetable_element(element: Tag | NavigableString | None) -> str:
-    return "" if element is None else element.text.strip()
+def process_timetable_element(elem: element.Tag | element.NavigableString | None) -> str:
+    return "" if elem is None else elem.text.strip()
 
 
 def time_handler(times: str, current_year: int,
-                 header_date: datetime) -> tuple[str, str]:
+                 header_date: datetime.datetime) -> tuple[str, str]:
     """Function for processing time in the format %H:%M-%H:%M"""
 
     # На tt может время не в формате 15:00-17:00, а 15:00(без времени окончания)
@@ -117,7 +117,7 @@ def time_handler(times: str, current_year: int,
     return "", ""
 
 
-async def event_crawler(html: str, user_id: int, initial_date: datetime,
+async def event_crawler(html: str, user_id: int, initial_date: datetime.datetime,
                         groups: dict[str, str]) -> None:
     """Function for searching for information and filling in tables"""
     dct = {
@@ -262,8 +262,8 @@ async def event_crawler(html: str, user_id: int, initial_date: datetime,
                 await fill_group_to_event_table(int(group_id), event_id)
 
 
-async def generate_week_url(user_id: int, left_date: datetime,
-                            right_date: datetime, groups: dict[str, str]):
+async def generate_week_url(user_id: int, left_date: datetime.datetime,
+                            right_date: datetime.datetime, groups: dict[str, str]):
     """A function to generate urls for each week and get their html"""
     delta = datetime.timedelta(days=7)
     copy_left_date = left_date
@@ -287,8 +287,8 @@ async def generate_week_url(user_id: int, left_date: datetime,
         await event_crawler(html, user_id, left_date, groups)
 
 
-async def fill_event_table_with_interval(left_border: datetime,
-                                         right_border: datetime) -> None:
+async def fill_event_table_with_interval(left_border: datetime.datetime,
+                                         right_border: datetime.datetime) -> None:
     """Function for filling the Event table with events from a certain interval"""
 
     # Необходимо получить список групп

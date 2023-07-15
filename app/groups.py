@@ -6,33 +6,33 @@ from sqlalchemy import text
 from app import get_html, engine, execute_insert
 
 
-async def fill_study_field_table(field_id: int, name: str):
+async def fill_study_field_table(field_id: int, name: str, year: int):
     """Function for filling in the Field table"""
 
     async with engine.connect() as session:
         await execute_insert(
             session,
-            text('INSERT INTO "Field"(id, name) '
-                 'VALUES(:field_id, :name) '
+            text('INSERT INTO "Field"(id, name, year)'
+                 'VALUES(:field_id, :name, :year)'
                  'ON CONFLICT (id) DO NOTHING'), {
                      'field_id': field_id,
-                     'name': name
+                     'name': name,
+                     'year': year
                  })
 
 
-async def fill_group_table(group_id: int, name: str, year: int,
+async def fill_group_table(group_id: int, name: str,
                            type_of_study: str, field_id: int):
     """Function for filling in the GroupOfStudy table"""
 
     async with engine.connect() as session:
         await execute_insert(
             session,
-            text('INSERT INTO "Group"(id, name, year, type, field_id) '
-                 'VALUES(:group_id, :name, :year, :type_of_study, :field_id) '
+            text('INSERT INTO "Group"(id, name, type, field_id) '
+                 'VALUES(:group_id, :name, :type_of_study, :field_id) '
                  'ON CONFLICT (id) DO NOTHING'), {
                      'group_id': group_id,
                      'name': name,
-                     'year': year,
                      'type_of_study': type_of_study,
                      'field_id': field_id
                  })
@@ -106,7 +106,7 @@ async def process_all_fields():
                         raise
 
                     # Заполняем таблицу для направления
-                    await fill_study_field_table(field_id, field_title)
+                    await fill_study_field_table(field_id, field_title, year)
                     group_html = bs4.BeautifulSoup(
                         markup=(await get_html(host + fields_link)),
                         features="lxml")
@@ -119,5 +119,4 @@ async def process_all_fields():
                     for group in group_html.findChildren(
                             'div', attrs={'class': 'tile'}):
                         group_id, group_name, group_type = process_group(group)
-                        await fill_group_table(group_id, group_name, year,
-                                               group_type, field_id)
+                        await fill_group_table(group_id, group_name, group_type, field_id)

@@ -16,7 +16,7 @@ async def fill_users() -> None:
 
 
 async def fill_events(option: str = "") -> None:
-    now = datetime.date.today()
+    now = datetime.datetime.today()
     delta = datetime.timedelta(days=now.weekday())
     new_delta = datetime.timedelta(days=21)
     fst_date = now - delta
@@ -24,6 +24,8 @@ async def fill_events(option: str = "") -> None:
     if option == "--delete":
         await delete_events(fst_date, snd_date)
     await fill_event_table_with_interval(fst_date, snd_date)
+    # await fill_event_table_with_interval(datetime.datetime.strptime("2023-06-05", "%Y-%m-%d"),
+    #                                      datetime.datetime.strptime("2023-07-05", "%Y-%m-%d"))
 
 
 if __name__ == '__main__':
