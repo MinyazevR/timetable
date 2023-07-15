@@ -12,7 +12,8 @@ class Event(Base):
     end_time = Column(DateTime)
     description = Column(String(256))
     location = Column(String(256))
-    __table_args__ = (UniqueConstraint('start_time', 'end_time', 'description', 'location'),)
+    __table_args__ = (UniqueConstraint('start_time', 'end_time', 'description',
+                                       'location'), )
 
 
 class User(Base):
@@ -63,5 +64,4 @@ class Group(Base):
     name = Column(String(128))
     year = Column(Integer)
     type = Column(String(32))
-    field_id = Column(Integer,
-                      ForeignKey('Field.id', ondelete='CASCADE'))
+    field_id = Column(Integer, ForeignKey('Field.id', ondelete='CASCADE'))

@@ -1,7 +1,6 @@
 import asyncio
 import datetime
 import sys
-import time
 
 from app import process_all_fields
 from app import process_all_names
@@ -25,6 +24,7 @@ async def fill_events(option: str = "") -> None:
     if option == "--delete":
         await delete_events(fst_date, snd_date)
     await fill_event_table_with_interval(fst_date, snd_date)
+
 
 if __name__ == '__main__':
     if sys.argv[1] == "users":

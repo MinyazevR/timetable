@@ -8,24 +8,37 @@ from app import engine, get_html, execute_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-async def fill_user_table(user_id: int, first_name: str, last_name, middle_name, post: str, department: str) -> None:
+async def fill_user_table(user_id: int, first_name: str, last_name,
+                          middle_name, post: str, department: str) -> None:
     """Function for filling in the User table"""
 
     async with engine.connect() as session:
-        await execute_insert(session, text(
+        await execute_insert(
+            session,
+            text(
                 'INSERT INTO "User" (id, first_name, last_name, middle_name, post, department) '
                 'VALUES(:user_id, :first_name, :last_name, :middle_name, :post, :department)'
-                'ON CONFLICT DO NOTHING;'),
-                {'user_id': user_id, 'first_name': first_name, 'last_name': last_name, 'middle_name': middle_name,
-                 'post': post, 'department': department})
+                'ON CONFLICT DO NOTHING;'), {
+                    'user_id': user_id,
+                    'first_name': first_name,
+                    'last_name': last_name,
+                    'middle_name': middle_name,
+                    'post': post,
+                    'department': department
+                })
 
 
-async def process_all_names(url: str = "https://timetable.spbu.ru/EducatorEvents/Index") -> None:
+async def process_all_names(
+        url: str = "https://timetable.spbu.ru/EducatorEvents/Index") -> None:
     """Function for processing all variants of surnames"""
 
     task_list = []
     for i in range(1040, 1072):
-        task_list.append(asyncio.create_task(get_html(f"https://timetable.spbu.ru/EducatorEvents/Index?q={chr(i)}")))
+        task_list.append(
+            asyncio.create_task(
+                get_html(
+                    f"https://timetable.spbu.ru/EducatorEvents/Index?q={chr(i)}"
+                )))
     for future in asyncio.as_completed(task_list):
         await process_all_users(await future)
 
@@ -38,12 +51,15 @@ async def process_all_users(html: str) -> None:
 
     for row in rows:
         # Получаем информацию о преподавателе
-        user_id, first_name, last_name, middle_name, posts, departments = process_user(row)
+        user_id, first_name, last_name, middle_name, posts, departments = process_user(
+            row)
         # Заполнение таблицы преподаватель
-        await fill_user_table(user_id, first_name, last_name, middle_name, posts, departments)
+        await fill_user_table(user_id, first_name, last_name, middle_name,
+                              posts, departments)
 
 
-def process_user(row: PageElement | Tag | NavigableString) -> tuple[tp.Any, ...] | None:
+def process_user(
+        row: PageElement | Tag | NavigableString) -> tuple[tp.Any, ...] | None:
     """A function for processing information about each user"""
 
     try:
@@ -54,7 +70,9 @@ def process_user(row: PageElement | Tag | NavigableString) -> tuple[tp.Any, ...]
         user_id = int(user_link[user_link.rfind('/') + 1:-1])
 
         # Кафедра
-        department_name_part = row.findNext('div', attrs={'class': 'col-sm-7'}).text.strip()
+        department_name_part = row.findNext('div', attrs={
+            'class': 'col-sm-7'
+        }).text.strip()
 
         # Имя
         name = row.findNext('div', attrs={'class': 'col-sm-3'}).text.strip()
@@ -72,7 +90,9 @@ def process_user(row: PageElement | Tag | NavigableString) -> tuple[tp.Any, ...]
         raise
 
     # Кафедр может быть несколько(пока что просто в строку)
-    department_name_parts = [x.strip() for x in department_name_part.split('\r\n')]
+    department_name_parts = [
+        x.strip() for x in department_name_part.split('\r\n')
+    ]
 
     # Должностей может быть несколько(пока что просто в строку)
     posts = [x.strip() for x in post.split('\r\n')]
@@ -89,4 +109,5 @@ def process_user(row: PageElement | Tag | NavigableString) -> tuple[tp.Any, ...]
     if len(full_name) == 3:
         middle_name = full_name[2]
 
-    return user_id, first_name, last_name, middle_name, " ".join(posts), " ".join(department_name_parts)
+    return user_id, first_name, last_name, middle_name, " ".join(
+        posts), " ".join(department_name_parts)
