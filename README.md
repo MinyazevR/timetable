@@ -7,6 +7,5 @@
 * создать базу данных (дальше будет пример для PostgreSQL)
 * создать в корневой директории файл config.py с единственной строкой: `DATABASE_URI = 'postgresql+asyncpg://<username>:<password>@localhost:<port>/<database_name>'`
 * alembic upgrade head
-* изменить в users.sh и events.sh имя базы данных и имя пользователя
-* bash users.sh
-* bash events.sh (скрипты запускать именно в таком порядке и перед запуском скрипта events.sh дождаться окончания users.sh, потому что раписание выкачивается на основе пользователей, которые инициализируются в users.sh)
+* python3 main.py users
+* python3 main.py events
