@@ -3,6 +3,7 @@ from config import DATABASE_URI
 
 engine = create_async_engine(DATABASE_URI)
 
+from app.common_requests import get_html
 from app.common_requests import execute_insert
 from app.users import process_all_names, process_user, process_all_users
 from app.groups import process_all_fields

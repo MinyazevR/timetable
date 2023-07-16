@@ -1,4 +1,5 @@
 import asyncio
+import aiohttp
 import bs4
 import typing as tp
 
@@ -7,24 +8,22 @@ from sqlalchemy import text
 from app import engine, get_html, execute_insert
 
 
-async def fill_user_table(user_id: int, first_name: str, last_name,
+async def fill_user_table(session, user_id: int, first_name: str, last_name,
                           middle_name, post: str, department: str) -> None:
     """Function for filling in the User table"""
-
-    async with engine.connect() as session:
-        await execute_insert(
-            session,
-            text(
-                'INSERT INTO "User" (id, first_name, last_name, middle_name, post, department) '
-                'VALUES(:user_id, :first_name, :last_name, :middle_name, :post, :department)'
-                'ON CONFLICT DO NOTHING;'), {
-                    'user_id': user_id,
-                    'first_name': first_name,
-                    'last_name': last_name,
-                    'middle_name': middle_name,
-                    'post': post,
-                    'department': department
-                })
+    await execute_insert(
+        session,
+        text(
+            'INSERT INTO "User" (id, first_name, last_name, middle_name, post, department) '
+            'VALUES(:user_id, :first_name, :last_name, :middle_name, :post, :department)'
+            'ON CONFLICT DO NOTHING;'), {
+                'user_id': user_id,
+                'first_name': first_name,
+                'last_name': last_name,
+                'middle_name': middle_name,
+                'post': post,
+                'department': department
+            })
 
 
 async def process_all_names(
@@ -32,14 +31,12 @@ async def process_all_names(
     """Function for processing all variants of surnames"""
 
     task_list = []
-    for i in range(1040, 1072):
-        task_list.append(
-            asyncio.create_task(
-                get_html(
-                    f"https://timetable.spbu.ru/EducatorEvents/Index?q={chr(i)}"
-                )))
-    for future in asyncio.as_completed(task_list):
-        await process_all_users(await future)
+    async with aiohttp.ClientSession() as session:
+        for i in range(1040, 1072):
+            task_list.append(
+                asyncio.create_task(get_html(f"{url}?q={chr(i)}", session)))
+        for future in asyncio.as_completed(task_list):
+            await process_all_users(await future)
 
 
 async def process_all_users(html: str) -> None:
@@ -50,17 +47,17 @@ async def process_all_users(html: str) -> None:
 
     if rows is None:
         return
+    async with engine.connect() as session:
+        for row in rows:
+            result = process_user(row)
+            if result is None:
+                continue
+            # Получаем информацию о преподавателе
+            user_id, first_name, last_name, middle_name, posts, departments = result
 
-    for row in rows:
-        result = process_user(row)
-        if result is None:
-            continue
-        # Получаем информацию о преподавателе
-        user_id, first_name, last_name, middle_name, posts, departments = result
-
-        # Заполнение таблицы преподаватель
-        await fill_user_table(user_id, first_name, last_name, middle_name,
-                              posts, departments)
+            # Заполнение таблицы преподаватель
+            await fill_user_table(session, user_id, first_name, last_name,
+                                  middle_name, posts, departments)
 
 
 def process_user(

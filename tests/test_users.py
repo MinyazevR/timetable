@@ -7,7 +7,7 @@ from app import process_user
 
 
 async def gen_for_users():
-    async with aiofiles.open('Users_A.html') as f:
+    async with aiofiles.open('html_files/Users_A.html') as f:
         text = await f.read()
     parsed_html = bs4.BeautifulSoup(markup=text, features="lxml")
     rows = parsed_html.findAll('div', attrs={'class': 'tile'})

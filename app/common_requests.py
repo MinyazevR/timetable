@@ -1,30 +1,30 @@
 import aiohttp
 import asyncio
-
 import typing as tp
 import asyncpg
+
 from sqlalchemy import TextClause, Result
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 
-async def get_html(url: str) -> str:
+async def get_html(url: str, session: aiohttp.ClientSession) -> str:
     delay = 1
-    async with aiohttp.ClientSession() as session:
-        for i in range(4):
-            async with session.get(
-                    url=url, headers={"Accept-Language":
-                                      "ru-RU,ru;q=0.5"}) as resp:
-                if resp.ok:
-                    return await resp.text()
-                await asyncio.sleep(delay)
-                delay *= 2
+    for i in range(4):
         async with session.get(url=url,
                                headers={"Accept-Language":
                                         "ru-RU,ru;q=0.5"}) as resp:
             if resp.ok:
                 return await resp.text()
-        resp.raise_for_status()
+            await asyncio.sleep(delay)
+            delay *= 2
+    async with session.get(url=url,
+                           headers={"Accept-Language":
+                                    "ru-RU,ru;q=0.5"}) as resp:
+        if resp.ok:
+            return await resp.text()
+    resp.raise_for_status()
     return ""
+
 
 async def execute_insert(session: AsyncConnection, txt: TextClause,
                          dct: dict[str, tp.Any]) -> Result:

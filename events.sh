@@ -1,4 +1,3 @@
-ulimit -n 1048576
 python3 main.py events
 psql -U ntyrreuir -d timetable -c 'COPY (select * from "Event") TO STDOUT WITH (FORMAT CSV, HEADER)' -o 'CSV/Event.csv'
 psql -U ntyrreuir -d timetable -c 'COPY (select * from "GroupToEvent") TO STDOUT WITH (FORMAT CSV, HEADER)' -o 'CSV/GroupToEvent.csv'
