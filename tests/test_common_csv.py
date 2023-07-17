@@ -205,14 +205,15 @@ EVENTS_INFO = [
 ]
 
 TEST_CASES = [
-    Case(data=FIELD_INFO, path_to_file="csv_for_test/Field.csv"),
-    Case(data=USER_INFO, path_to_file="csv_for_test/User.csv"),
-    Case(data=GROUP_INFO, path_to_file="csv_for_test/Group.csv")
+    Case(data=FIELD_INFO, path_to_file="tests/csv_for_test/Field.csv"),
+    Case(data=USER_INFO, path_to_file="tests/csv_for_test/User.csv"),
+    Case(data=GROUP_INFO, path_to_file="tests/csv_for_test/Group.csv")
 ]
 
-EVENT_TEST_CASES = [Case(data=EVENTS_INFO, path_to_file="csv_for_test/Event.csv")]
+EVENT_TEST_CASES = [Case(data=EVENTS_INFO, path_to_file="tests/csv_for_test/Event.csv")]
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize('test', TEST_CASES)
 async def test_get_user_info_in_csv(test: Case) -> None:
     frame = pandas.read_csv(test.path_to_file)
@@ -221,6 +222,7 @@ async def test_get_user_info_in_csv(test: Case) -> None:
     assert set(test.data) == set((rows.itertuples(index=False, name=None)))
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize('test', EVENT_TEST_CASES)
 async def test_get_user_info_in_csv(test: Case) -> None:
     frame = pandas.read_csv(test.path_to_file)
@@ -232,8 +234,8 @@ async def test_get_user_info_in_csv(test: Case) -> None:
 
         assert len(rows) == 1
         event_id = rows['id'].iloc[0]
-        user_to_event_frame = pandas.read_csv('csv_for_test/UserToEvent.csv')
-        group_to_event_frame = pandas.read_csv('csv_for_test/GroupToEvent.csv')
+        user_to_event_frame = pandas.read_csv('tests/csv_for_test/UserToEvent.csv')
+        group_to_event_frame = pandas.read_csv('tests/csv_for_test/GroupToEvent.csv')
         user_rows = user_to_event_frame.loc[(user_to_event_frame ['user_id'] == elem[4])
                                             & (user_to_event_frame ['event_id'] == event_id)]
         for i in range(5, len(elem)):
