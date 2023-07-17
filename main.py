@@ -2,6 +2,8 @@ import asyncio
 import datetime
 import sys
 
+import pandas
+
 from app import process_all_fields
 from app import process_all_names
 from app import fill_event_table_with_interval

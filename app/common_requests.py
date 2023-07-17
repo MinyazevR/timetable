@@ -3,7 +3,6 @@ import asyncio
 import typing as tp
 import asyncpg
 
-from sqlalchemy import TextClause, Result
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 
@@ -26,8 +25,8 @@ async def get_html(url: str, session: aiohttp.ClientSession) -> str:
     return ""
 
 
-async def execute_insert(session: AsyncConnection, txt: TextClause,
-                         dct: dict[str, tp.Any]) -> Result:
+async def execute_insert(session: AsyncConnection, txt,
+                         dct: dict[str, tp.Any]):
     try:
         result = await session.execute(txt, dct)
     except asyncpg.IntegrityConstraintViolationError:
