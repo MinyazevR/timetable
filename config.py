@@ -1,1 +1,1 @@
-DATABASE_URI = 'postgresql+asyncpg://<username>:<password>@localhost:<port>/<database_name>'
+DATABASE_URI = 'postgresql+asyncpg://name:password@localhost:1234/db_name'
