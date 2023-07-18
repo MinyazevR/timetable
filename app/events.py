@@ -17,9 +17,9 @@ async def delete_events(session, left_date: datetime.datetime,
         text('DELETE From "Event" '
              'WHERE "Event".start_time >= (:left_date) '
              'AND "Event".end_time <= (:right_date)'), {
-                 'left_date': left_date,
-                 'right_date': right_date
-             })
+            'left_date': left_date,
+            'right_date': right_date
+        })
     await session.commit()
 
 
@@ -49,7 +49,7 @@ async def fill_event_table(session, dt_start: datetime.datetime,
                 'location': location
             })
         if (row := result.fetchone()) is None or (current_id :=
-                                                  row[0]) is None:
+        row[0]) is None:
             continue
         return current_id
 
@@ -64,9 +64,9 @@ async def fill_user_to_event_table(session, user_id: int, event_id: int):
             'INSERT INTO "UserToEvent" (user_id, event_id) VALUES(:user_id, :event_id) '
             'ON CONFLICT (user_id, event_id) '
             'DO NOTHING'), {
-                'user_id': user_id,
-                'event_id': event_id
-            })
+            'user_id': user_id,
+            'event_id': event_id
+        })
 
 
 async def fill_group_to_event_table(session, group_id: int, event_id: int):
@@ -77,9 +77,9 @@ async def fill_group_to_event_table(session, group_id: int, event_id: int):
             'INSERT INTO "GroupToEvent"(group_id, event_id) VALUES(:group_id, :event_id) '
             'ON CONFLICT (group_id, event_id) '
             'DO NOTHING'), {
-                'group_id': group_id,
-                'event_id': event_id
-            })
+            'group_id': group_id,
+            'event_id': event_id
+        })
 
 
 def process_timetable_element(
@@ -220,7 +220,7 @@ async def event_crawler(html: str, user_id: int,
 
                 location = "" if len(location_and_groups_element
                                      ) == 0 else process_timetable_element(
-                                         location_and_groups_element[0])
+                    location_and_groups_element[0])
 
                 if len(location) > 0 and location[-1] == "►":
                     location = location[:-1].strip()
@@ -229,7 +229,7 @@ async def event_crawler(html: str, user_id: int,
 
                 groups_name = "" if len(location_and_groups_element
                                         ) < 2 else process_timetable_element(
-                                            location_and_groups_element[1])
+                    location_and_groups_element[1])
 
                 # Ксли время не указано, то в качестве значения по умолчанию берется начало unix-time
                 dt_start = datetime.datetime(
@@ -239,7 +239,7 @@ async def event_crawler(html: str, user_id: int,
                 dt_end = datetime.datetime(
                     year=1970, day=1,
                     month=1) if end_time == "" else datetime.datetime.strptime(
-                        end_time, '%Y%m%dT%H%M%SZ')
+                    end_time, '%Y%m%dT%H%M%SZ')
 
                 # Заполняем таблицу Event
                 event_id = await fill_event_table(session, dt_start, dt_end,
@@ -294,20 +294,22 @@ async def fill_event_table_with_interval(
 
     # Необходимо получить список групп
     # Сами события будет получать именно из раписания каждого пользователя
-    async with engine.connect() as lol:
+    async with engine.connect() as session:
+        # удаляем события, начинающиеся с текущей недели
+        await delete_events(session, left_border, right_border)
         groups = {
             x: y
-            for x, y in (await lol.execute(text('SELECT name, id FROM "Group"')
-                                           )).fetchall()
+            for x, y in (await session.execute(text('SELECT name, id FROM "Group"')
+                                               )).fetchall()
         }
         user_row = (await
-                    lol.execute(text('SELECT id FROM "User"'))).fetchall()
+                    session.execute(text('SELECT id FROM "User"'))).fetchall()
 
     date_list = []
     delta = datetime.timedelta(days=7)
     copy_left_date = left_border
 
-    while copy_left_date < right_border:
+    while copy_left_date <= right_border:
         url_part = datetime.datetime.strftime(copy_left_date, "%Y-%m-%d")
         date_list.append(url_part)
         copy_left_date += delta
