@@ -4,4 +4,4 @@ psql -U ntyrreuir -d timetable -c 'COPY (select * from "Group") TO STDOUT WITH (
 psql -U ntyrreuir -d timetable -c 'COPY (select * from "Field") TO STDOUT WITH (FORMAT CSV, HEADER)' -o 'CSV/Field.csv'
 git add CSV
 git commit -m "Change tables"
-git push origin first-branch
+git push origin main
